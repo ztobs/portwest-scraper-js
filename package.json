@@ -1,0 +1,17 @@
+{
+  "name": "portwest-scraper",
+  "version": "1.0.0",
+  "description": "Scrapes products from portwest.com",
+  "main": "index.js",
+  "scripts": {
+    "debug": "clear && node scraper2.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joseph Lukan",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "puppeteer": "^2.1.1"
+  }
+}
