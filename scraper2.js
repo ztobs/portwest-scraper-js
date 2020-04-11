@@ -39,7 +39,6 @@
 //   return dom;
 // };
 
-const sessionFile = "session.json";
 const url = "https://portwest.co.uk/";
 const cred = require("./pw_credentials.json");
 
@@ -47,16 +46,26 @@ const cred = require("./pw_credentials.json");
   const pup = require("./Puppeteer");
   const Pup = await new pup();
   await Pup.init();
-  //   await Pup.open(url, "./session.json");
 
-  await Pup.open(url, "F");
-  await Pup.login(cred);
-  await Pup.saveSession(sessionFile);
+  // // login to portwest
+  // await Pup.open("https://portwest.co.uk/main/login/", "F");
+  // await Pup.login(cred);
+  // await Pup.saveSession();
+  // await Pup.screenshot("./output/afterlogin.png");
+
+  // goto product page by sku
+  await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected to main page here
+
+  await Pup.loadProductPage("CV05");
+  const dd = await Pup.getProductData();
+  console.log("prodData", dd);
 
   //   const data = await Pup.getDom(".menu-title");
   //   Pup.writeToFile("./output/dom.html", data);
 
-  await Pup.screenshot("./output/shot.png");
+  await Pup.screenshot("./output/final.png");
+
+  // await Pup.loadProductPage("BIZ4");
 
   Pup.close();
-})();
+})().catch((err) => console.log(err));
