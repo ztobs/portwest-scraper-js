@@ -56,9 +56,11 @@ const cred = require("./pw_credentials.json");
   // goto product page by sku
   await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected to main page here
 
-  await Pup.loadProductPage("CV05");
+  await Pup.loadProductPage("FC15");
   const dd = await Pup.getProductData();
   console.log("prodData", dd);
+
+  // await Pup.writeDom();
 
   //   const data = await Pup.getDom(".menu-title");
   //   Pup.writeToFile("./output/dom.html", data);

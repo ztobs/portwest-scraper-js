@@ -1,21 +1,9 @@
-const { sessionFile } = require("./constants");
+const imgs1 = [
+  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR.jpg",
+  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR_R.jpg",
+  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR_S.jpg",
+];
 
-class Hello {
-  doHello = async () => {
-    const fs = require("fs");
+const ext = imgs1.shift();
 
-    const dd = fs.readFileSync("./session.json", "utf8");
-    return dd;
-  };
-}
-
-(async () => {
-  const hello = await new Hello();
-  const aa = await hello.doHello();
-  const cc = [...JSON.parse(aa)];
-  const bb = cc;
-
-  console.log(bb);
-})().catch((e) => {
-  console.log(e);
-});
+console.log(imgs1);

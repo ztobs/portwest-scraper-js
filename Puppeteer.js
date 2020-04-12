@@ -29,16 +29,19 @@ class Puppeteer {
   /*
    * Produces element dom in text
    */
-  getDom = async (selector) => {
+  getDom = async (selector = null) => {
     const dom = await this.page.evaluate((selector) => {
       let data = [];
-      const node = document.querySelectorAll(selector);
+      let node;
+      if (selector) node = document.querySelectorAll(selector);
+      else node = document.querySelectorAll("body");
+
       node.forEach((item) => {
         data.push(item.innerHTML);
       });
       return data;
     }, selector);
-    return dom;
+    return dom.length == 1 ? dom[0] : dom;
   };
 
   /*
@@ -121,12 +124,293 @@ class Puppeteer {
    * Get product data in array
    */
   getProductData = async () => {
-    return await this.page.evaluate(() => {
-      const data = document.querySelector(
-        "body > div.container > div.row > div > div > div > div.col-lg-8.col-md-9 > div > h2"
-      ).plaintext;
-      return data;
-    });
+    const productName = await this.getProductName();
+    const productColors = await this.getProductColors();
+    const productItemNames = await this.getProductItemNames();
+    const productSizes = await this.getProductSizes();
+    const productSOH = await this.getProductSOH();
+    const productPrices = await this.getProductPrices();
+    const productBoxQty = await this.getProductBoxQty();
+    const productDesc = await this.getProductDesc();
+    const productShortDesc = await this.getProductShortDesc();
+    const productImages = await this.getProductImages();
+    return productImages;
+  };
+
+  /*
+   * Get product name
+   */
+  getProductName = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        const data = document.querySelector(
+          "body > div.container > div.row > div > div > div > div.col-lg-8.col-md-9 > div > h2"
+        ).innerText;
+        return data;
+      });
+      return ret.split("-")[1].trim();
+    } catch (error) {
+      console.log("cannot fetch product name");
+      return null;
+    }
+  };
+
+  /*
+   * Get product style
+   */
+  getProductStyle = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        const data = document.querySelector(
+          "body > div.container > div.row > div > div > div > div.col-lg-8.col-md-9 > div > h2"
+        ).innerText;
+        return data;
+      });
+      return ret.split("-")[0].trim();
+    } catch (error) {
+      console.log("cannot fetch product style");
+      return null;
+    }
+  };
+
+  /*
+   * Get product colors
+   */
+  getProductColors = async (hrefTrue) => {
+    try {
+      const ret = await this.page.evaluate((hrefTrue) => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "body > div.container > div.row > div > div > div > div.col-lg-8.col-md-9 > div > div.product-filters-container > div > ul li a"
+          )
+          .forEach((ele) => {
+            if (hrefTrue) data.push(ele.href);
+            else data.push(ele.title);
+          });
+        return data;
+      }, hrefTrue);
+      return ret;
+    } catch (error) {
+      console.log("cannot fetch product colors");
+      return null;
+    }
+  };
+
+  /*
+   * Get product item names
+   */
+  getProductItemNames = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "#content1 > form > div > table > tbody > tr td:nth-child(1)"
+          )
+          .forEach((ele) => {
+            data.push(ele.innerText.trim());
+          });
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("cannot fetch product item names");
+      return null;
+    }
+  };
+
+  /*
+   * Get product sizes
+   */
+  getProductSizes = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "#content1 > form > div > table > tbody > tr td:nth-child(2)"
+          )
+          .forEach((ele) => {
+            data.push(ele.innerText.trim());
+          });
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("cannot fetch product sizes");
+      return null;
+    }
+  };
+
+  /*
+   * Get product SOH
+   */
+  getProductSOH = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "#content1 > form > div > table > tbody > tr td:nth-child(3)"
+          )
+          .forEach((ele) => {
+            data.push(ele.innerText.trim());
+          });
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("Cannot fetch product SOH");
+      return null;
+    }
+  };
+
+  /*
+   * Get product prices
+   */
+  getProductPrices = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "#content1 > form > div > table > tbody > tr td:nth-child(5)"
+          )
+          .forEach((ele) => {
+            data.push(ele.innerText.trim().replace("$", ""));
+          });
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("Cannot fetch prices");
+      return null;
+    }
+  };
+
+  /*
+   * Get product box qty
+   */
+  getProductBoxQty = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        let data = [];
+        document
+          .querySelectorAll(
+            "#content1 > form > div > table > tbody > tr td:nth-child(7)"
+          )
+          .forEach((ele) => {
+            data.push(ele.innerText.trim());
+          });
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("Cannot fetch prices");
+      return null;
+    }
+  };
+
+  /*
+   * Get product description
+   */
+  getProductDesc = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        const data1 = document.querySelector("#content3").innerHTML;
+        const data2 = document.querySelector("#content4").innerHTML;
+        return data1 + data2;
+      });
+      return ret;
+    } catch (error) {
+      console.log("cannot fetch product description");
+      return null;
+    }
+  };
+
+  /*
+   * Get product images
+   */
+  getProductImages = async () => {
+    try {
+      const style = await this.getProductStyle();
+      return await this.page.evaluate((style) => {
+        let imgs1 = [];
+        document
+          .querySelectorAll("#carousel-custom-dots img")
+          .forEach((ele) => {
+            imgs1.push(ele.src);
+          });
+        // imgs1 is output here
+
+        // get url attachments
+        const atts = imgs1.map((im) => {
+          const arr = im.split("/");
+          const arr1 = arr[arr.length - 1].split("_");
+          return arr1[arr1.length - 1].replace(".jpg", "");
+        });
+        atts.shift(); // remove the first
+        //atts is output here
+
+        // get color codes
+        let colHref = [];
+        document
+          .querySelectorAll(
+            "body > div.container > div.row > div > div > div > div.col-lg-8.col-md-9 > div > div.product-filters-container > div > ul li a"
+          )
+          .forEach((ele) => {
+            colHref.push(ele.href);
+          });
+        const colCode = colHref.map((cc) => {
+          const arr = cc.split("/");
+          return arr[arr.length - 1];
+        });
+        //colCode is output here
+
+        // split image url
+        const imgUrlPartUrl = imgs1[0].split("/");
+        imgUrlPartUrl.pop(); // remove the last
+        const imgUrlPre = imgUrlPartUrl.join("/"); // back to string
+        //imgUrlPre is output here
+
+        // create new img urls
+        const imgUrls = [];
+        colCode.forEach((code) => {
+          imgUrls.push(imgUrlPre + "/" + style + code + ".jpg");
+          atts.forEach((att) => {
+            imgUrls.push(imgUrlPre + "/" + style + code + "_" + att + ".jpg");
+          });
+        });
+        //imgUrls is output here
+
+        return imgUrls;
+      }, style);
+    } catch (error) {
+      console.log(`cannot fetch product images: ${error}`);
+      return null;
+    }
+  };
+
+  /*
+   * Get product short description
+   */
+  getProductShortDesc = async () => {
+    try {
+      const ret = await this.page.evaluate(() => {
+        const data =
+          document
+            .querySelector("#content3")
+            .innerText.trim()
+            .replace(/\s\s+/g, " ")
+            .substring(0, 300) + "...";
+        return data;
+      });
+      return ret;
+    } catch (error) {
+      console.log("cannot fetch short description");
+      return null;
+    }
   };
 
   /*
@@ -134,6 +418,11 @@ class Puppeteer {
    */
   close = () => {
     this.browser.close();
+  };
+
+  writeDom = async (selector) => {
+    const data = await this.getDom(selector);
+    this.writeToFile("./temp.html", data, "dom");
   };
 }
 
