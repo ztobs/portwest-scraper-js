@@ -54,7 +54,7 @@ const cred = require("./pw_credentials.json");
   // await Pup.screenshot("./output/afterlogin.png");
 
   // goto product page by sku
-  await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected to main page here
+  await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
 
   await Pup.loadProductPage("FC15");
   const dd = await Pup.getProductData();
@@ -71,3 +71,5 @@ const cred = require("./pw_credentials.json");
 
   Pup.close();
 })().catch((err) => console.log(err));
+
+// dont use '/' to seperate product variations because some colors already use it, use '|'

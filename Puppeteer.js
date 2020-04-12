@@ -134,7 +134,19 @@ class Puppeteer {
     const productDesc = await this.getProductDesc();
     const productShortDesc = await this.getProductShortDesc();
     const productImages = await this.getProductImages();
-    return productImages;
+
+    return {
+      productName,
+      productColors,
+      productItemNames,
+      productSizes,
+      productSOH,
+      productPrices,
+      productBoxQty,
+      productDesc,
+      productShortDesc,
+      productImages,
+    };
   };
 
   /*
