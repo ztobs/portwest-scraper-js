@@ -4,6 +4,7 @@ const {
   sessionFile,
   timeDelay,
   timePageLoad,
+  catSeperator,
 } = require("./constants");
 
 class Puppeteer {
@@ -118,6 +119,65 @@ class Puppeteer {
     );
     await this.page.waitFor(timePageLoad);
     await this.page.screenshot({ path: "./output/prodPage.png" });
+  };
+
+  /*
+   * Get Category level 2 link array
+   */
+  getCat2LinkArray = async () => {
+    try {
+      return await this.page.evaluate(() => {
+        const selector =
+          "body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(1) .menu-title > :nth-child(1), body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(2) .menu-title > :nth-child(1), body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(3) .menu-title > :nth-child(1), body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(4) .menu-title > :nth-child(1), body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(5) .menu-title > :nth-child(1)";
+        return [...document.querySelectorAll(selector)].map((ele) => {
+          return { id: ele.href.split("/").pop(), text: ele.innerText };
+        });
+      });
+    } catch (error) {
+      console.log("cannot get link level 2 array");
+      return null;
+    }
+  };
+
+  /*
+   * Get Category leve n links
+   */
+  getCatnLinks = async () => {
+    try {
+      const cat2Links = await this.getCat2LinkArray();
+      return await this.page.evaluate(
+        ({ cat2Links, catSeperator }) => {
+          const selector =
+            "body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(1) > div > div > div > div ul a, body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(2) > div > div > div > div ul a, body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(3) > div > div > div > div ul a, body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(4) > div > div > div > div ul a, body > div.page-wrapper > header > div > div.header-bottom > div > nav > ul > li:nth-child(5) > div > div > div > div ul a";
+          return [...document.querySelectorAll(selector)].map((ele) => {
+            const split = ele.href
+              .split("/")
+              .filter((ee, ind) => ind === 4 || ind === 5 || ind === 7)
+              .map((ez, indz) =>
+                indz === 2 ? cat2Links.find((ei) => ei.id == ez).text : ez
+              );
+
+            return {
+              href: ele.href,
+              text: `${split[0]}${catSeperator}${split[2]}${catSeperator}${split[1]}`.toUpperCase(),
+            };
+          });
+        },
+        { cat2Links, catSeperator }
+      );
+    } catch (error) {
+      console.log("cannot get category links");
+      return null;
+    }
+  };
+
+  /*
+   * Get category links
+   */
+  getCatLinks = async () => {
+    const catLink1 = await this.getCatnLinks();
+
+    return catLink1;
   };
 
   /*

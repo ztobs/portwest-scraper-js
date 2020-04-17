@@ -4,6 +4,7 @@ const constants = {
   timeDelay: 500,
   timePageLoad: 10000,
   sessionFile: "./session.json",
+  catSeperator: "|",
 };
 
 module.exports = constants;
