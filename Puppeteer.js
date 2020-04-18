@@ -5,17 +5,31 @@ const {
   timeDelay,
   timePageLoad,
   catSeperator,
+  genPath,
 } = require("./constants");
 
 class Puppeteer {
-  puppeteer = require("puppeteer");
-  fs = require("fs");
+  // browser
+  chromium = require("chrome-aws-lambda");
+
+  lodashId = require("lodash-id");
 
   init = async (cookie) => {
-    this.browser = await this.puppeteer.launch({
+    // initialize db
+    const low = require("lowdb");
+    const fileSync = require("lowdb/adapters/FileSync");
+    const adapter = new fileSync(genPath + "db.json");
+    this.db = low(adapter);
+    this.db.defaults({ products: [], state: {} }).write();
+    this.db._.mixin(this.lodashId);
+
+    // initialize browser
+    this.browser = await this.chromium.puppeteer.launch({
       ignoreHTTPSErrors: true,
       headless: true,
       userDataDir: "./browser_data",
+      args: [...this.chromium.args, "--single-process"],
+      executablePath: await this.chromium.executablePath,
     });
     this.page = await this.browser.newPage();
     await this.page.setViewport({
@@ -122,6 +136,117 @@ class Puppeteer {
   };
 
   /*
+   * Save products to db
+   */
+  saveProductsUrl = async (clean = false) => {
+    try {
+      const catLinks = await this.getCats();
+      const lastWriteId = this.db.get("state.prodLastWriteId").value();
+      const lastWriteHref = this.db.get("state.prodLastWriteHref").value();
+      const lastWriteCat = this.db.get("state.prodLastWriteCat").value();
+      let counter = lastWriteId ? lastWriteId : 0;
+      let start = counter < 1 ? true : false;
+      console.log(start, "start");
+
+      // loop through cats
+      for (let i = 0; i < catLinks.length; i++) {
+        const cat = catLinks[i];
+        const prodLinks = await this.getProductLinksInCat(cat.href);
+
+        // loop through products
+        for (let j = 0; j < prodLinks.length; j++) {
+          const pL = prodLinks[j];
+          console.log(start, "start");
+          console.log(lastWriteHref, counter);
+          console.log(lastWriteCat, cat.text);
+
+          if (start || lastWriteHref == pL) {
+            // prevent saving if already saved, didnt just use counter because we would also control/prvent from page loading so not all cats will get here
+            if (start === false) {
+              start = true;
+              counter++;
+              continue;
+            }
+
+            this.db
+              .get("products")
+              .push({ id: counter, href: pL, cat: cat.text })
+              .write();
+            this.db.set("state.prodLastWriteId", counter).write();
+            this.db.set("state.prodLastWriteHref", pL).write();
+            this.db.set("state.prodLastWriteCat", cat.text).write();
+            counter++;
+            console.log(`id ${counter} written`);
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`cannot save to products database`, error);
+      return null;
+    }
+  };
+
+  /*
+   * Get product links in cat
+   */
+  getProductLinksInCat = async (url) => {
+    try {
+      await this.open(url);
+      return await this.page.evaluate(() => {
+        const selector = ".product .product-title a";
+        return [...document.querySelectorAll(selector)].map((ele) => ele.href);
+      });
+    } catch (error) {
+      console.log(`cannot get products in cat url ${url}`);
+      return null;
+    }
+  };
+
+  /*
+   * Get write product to csv
+   */
+  writeProductToCSV = async (product, filename) => {
+    try {
+      const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+      const csvWriter = createCsvWriter({
+        path: "out.csv",
+        header: [
+          { id: "type", title: "Type" },
+          { id: "sku", title: "SKU" },
+          { id: "name", title: "Name" },
+          { id: "published", title: "Published" },
+          { id: "featured", title: "Is featured?" },
+          { id: "visibility", title: "Visibility in catalog" },
+          { id: "sDesc", title: "Short Description" },
+          { id: "desc", title: "Description" },
+          { id: "tax", title: "Tax Status" },
+          { id: "inStock", title: "In stock?" },
+          { id: "weight", title: "Weight" },
+          { id: "reviews", title: "Allow customer reviews?" },
+          { id: "note", title: "Purchase Note" },
+          { id: "price", title: "Price" },
+          { id: "stock", title: "Stock" },
+          { id: "cat", title: "Categories" },
+          { id: "img", title: "Images" },
+          { id: "pos", title: "Position" },
+          { id: "boxQty", title: "Box Quantity" },
+          { id: "soh", title: "SOH" },
+          { id: "item", title: "Item" },
+          { id: "color", title: "Color" },
+          { id: "size", title: "Size" },
+        ],
+      });
+      csvWriter
+        .writeRecords([product]) // returns a promise
+        .then(() => {
+          console.log(`${product.sku} written to csv`);
+        });
+    } catch (error) {
+      console.log(`cannot write ${product.sku} to csv`);
+    }
+  };
+
+  /*
    * Get Category level 2 link array
    */
   getCat2LinkArray = async () => {
@@ -140,9 +265,9 @@ class Puppeteer {
   };
 
   /*
-   * Get Category leve n links
+   * Get Categories
    */
-  getCatnLinks = async () => {
+  getCats = async () => {
     try {
       const cat2Links = await this.getCat2LinkArray();
       return await this.page.evaluate(
@@ -169,15 +294,6 @@ class Puppeteer {
       console.log("cannot get category links");
       return null;
     }
-  };
-
-  /*
-   * Get category links
-   */
-  getCatLinks = async () => {
-    const catLink1 = await this.getCatnLinks();
-
-    return catLink1;
   };
 
   /*

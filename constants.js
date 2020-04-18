@@ -5,6 +5,7 @@ const constants = {
   timePageLoad: 10000,
   sessionFile: "./session.json",
   catSeperator: "|",
+  genPath: "generated/",
 };
 
 module.exports = constants;

@@ -38,6 +38,7 @@
 //   const dom = await axios.get(url);
 //   return dom;
 // };
+require("events").EventEmitter.defaultMaxListeners = 0;
 
 const url = "https://portwest.co.uk/";
 const cred = require("./pw_credentials.json");
@@ -53,21 +54,26 @@ const cred = require("./pw_credentials.json");
   // await Pup.saveSession();
   // await Pup.screenshot("./output/afterlogin.png");
 
-  // goto product page by sku
+  // load any F**cking page
   await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
+
+  // get category links
+  await Pup.saveProductsUrl();
+
+  // goto product page by sku
+  // await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
 
   // await Pup.loadProductPage("FC15");
   // const dd = await Pup.getProductData();
 
-  const dd = await Pup.getCatLinks();
-  console.log("link", dd);
+  // console.log("link", dd);
 
   // await Pup.writeDom();
 
   //   const data = await Pup.getDom(".menu-title");
   //   Pup.writeToFile("./output/dom.html", data);
 
-  await Pup.screenshot("./output/final.png");
+  // await Pup.screenshot("./output/final.png");
 
   // await Pup.loadProductPage("BIZ4");
 

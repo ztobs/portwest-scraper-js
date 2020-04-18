@@ -1,9 +1,18 @@
-const imgs1 = [
-  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR.jpg",
-  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR_R.jpg",
-  "https://d11ak7fd9ypfb7.cloudfront.net/styles1100px/S785NAR_S.jpg",
-];
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
 
-const ext = imgs1.shift();
+const adapter = new FileSync("db.json");
+const lodashId = require("lodash-id");
+const db = low(adapter);
 
-console.log(imgs1);
+// Set some defaults
+db.defaults({ posts: [], user: {} }).write();
+
+// db._.mixin(lodashId);
+
+// db.get("posts").insert({ title: "new record" }).write();
+const val = db.get("user").set("title", "value").write();
+
+// const val = db.get("posts").getById(1).value();
+
+// console.log(val);
