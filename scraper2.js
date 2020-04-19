@@ -40,13 +40,14 @@
 // };
 require("events").EventEmitter.defaultMaxListeners = 0;
 
+const resume = true;
 const url = "https://portwest.co.uk/";
 const cred = require("./pw_credentials.json");
 
 (async () => {
   const pup = require("./Puppeteer");
   const Pup = await new pup();
-  await Pup.init();
+  await Pup.init(resume);
 
   // // login to portwest
   // await Pup.open("https://portwest.co.uk/main/login/", "F");
@@ -67,11 +68,10 @@ const cred = require("./pw_credentials.json");
   Pup.close();
 })().catch((err) => console.log(err));
 
-// dont use '/' to seperate product variations because some colors already use it, use '|'
-
 /* todo
- * Dont save product urls already saved *done*
+ * // Dont save product urls already saved *done*
  * Dont load cat links already fetched
- * navigate through products saved in temp db and load the products
- * dont write products already written to csv
+ * // navigate through products saved in temp db and load the products *done*
+ * // dont write products already written to csv *done*
+ * fix csv overwitten on resume and set final('new') parameter for clear csv
  */

@@ -6,6 +6,7 @@ const {
   timePageLoad,
   catSeperator,
   genPath,
+  dbFile,
   attrSeperator,
   outputPath,
   finalProdCSV,
@@ -16,12 +17,17 @@ class Puppeteer {
   chromium = require("chrome-aws-lambda");
   createCsvWriter = require("csv-writer").createObjectCsvWriter;
   lodashId = require("lodash-id");
+  fs = require("fs");
 
-  init = async (cookie) => {
+  init = async (resume) => {
+    this.resume = resume;
+    if (!this.fs.existsSync(outputPath + finalProdCSV)) resume = false;
+    if (resume == false) await this.cleanup();
+
     // initialize db
     const low = require("lowdb");
     const fileSync = require("lowdb/adapters/FileSync");
-    const adapter = new fileSync(genPath + "db.json");
+    const adapter = new fileSync(genPath + dbFile);
     this.db = low(adapter);
     this.db.defaults({ products: [], state: {} }).write();
     this.db._.mixin(this.lodashId);
@@ -54,6 +60,7 @@ class Puppeteer {
         { id: "color", title: "Color" },
         { id: "size", title: "Size" },
       ],
+      append: resume ? true : false,
     });
 
     // initialize browser
@@ -72,6 +79,14 @@ class Puppeteer {
     });
     await this.page.setDefaultNavigationTimeout(navTimeout);
     await this.page.setDefaultTimeout(waitTimeout);
+  };
+
+  /*
+   * cleanup all esisting data and start fresh
+   */
+  cleanup = async () => {
+    await this.fs.unlink(outputPath + finalProdCSV, () => {});
+    await this.fs.unlink(genPath + dbFile, () => {});
   };
 
   /*
@@ -120,8 +135,7 @@ class Puppeteer {
    * writes text to file
    */
   writeToFile = (filename, data, log) => {
-    const fs = require("fs");
-    fs.writeFile(filename, data, function (err) {
+    this.fs.writeFile(filename, data, function (err) {
       if (err) throw err;
       console.log(`${log} written to file`);
     });

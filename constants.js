@@ -7,6 +7,7 @@ const constants = {
   catSeperator: ">",
   attrSeperator: "|",
   genPath: "generated/",
+  dbFile: "db.json",
   outputPath: "output/",
   finalProdCSV: "products-portwest.csv",
 };
