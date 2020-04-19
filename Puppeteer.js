@@ -272,7 +272,7 @@ class Puppeteer {
         inStock: 1,
         weight: null,
         reviews: 1,
-        note: "Thank you for buy from Mann Support",
+        note: "Thank you for buying from Mann Support",
         price: productPrices.join(attrSeperator),
         stock: 500,
         img: productImages.join(attrSeperator),
