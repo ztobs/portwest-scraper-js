@@ -20,9 +20,10 @@ class Puppeteer {
   fs = require("fs");
 
   init = async (resume) => {
+    let append = false;
     this.resume = resume;
-    if (!this.fs.existsSync(outputPath + finalProdCSV)) resume = false;
-    if (resume == false) await this.cleanup();
+    if (!resume) await this.cleanup();
+    if (this.fs.existsSync(outputPath + finalProdCSV)) append = true;
 
     // initialize db
     const low = require("lowdb");
@@ -60,7 +61,7 @@ class Puppeteer {
         { id: "color", title: "Color" },
         { id: "size", title: "Size" },
       ],
-      append: resume ? true : false,
+      append: append,
     });
 
     // initialize browser
@@ -90,55 +91,12 @@ class Puppeteer {
   };
 
   /*
-   * Produces element dom in text
-   */
-  getDom = async (selector = null) => {
-    const dom = await this.page.evaluate((selector) => {
-      let data = [];
-      let node;
-      if (selector) node = document.querySelectorAll(selector);
-      else node = document.querySelectorAll("body");
-
-      node.forEach((item) => {
-        data.push(item.innerHTML);
-      });
-      return data;
-    }, selector);
-    return dom.length == 1 ? dom[0] : dom;
-  };
-
-  /*
-   * Creates screenshots
-   */
-  screenshot = async (filename) => {
-    await this.page.screenshot({ path: filename });
-  };
-
-  /*
    * opens a url in browser page
    */
   open = async (url, wait = "P") => {
     await this.page.goto(url, wait == "F" ? { waitUntil: "networkidle0" } : {});
 
     if (wait === "F") await this.page.waitFor(timePageLoad);
-  };
-
-  /*
-   * saves session to file
-   */
-  saveSession = async () => {
-    const cookies = await this.page.cookies();
-    this.writeToFile(sessionFile, JSON.stringify(cookies, null, 2), "cookies");
-  };
-
-  /*
-   * writes text to file
-   */
-  writeToFile = (filename, data, log) => {
-    this.fs.writeFile(filename, data, function (err) {
-      if (err) throw err;
-      console.log(`${log} written to file`);
-    });
   };
 
   /*
@@ -186,15 +144,14 @@ class Puppeteer {
   /*
    * Save products to db
    */
-  saveProductsUrl = async (clean = false) => {
+  saveProductsUrl = async (dontSaveProductUrls) => {
+    if (dontSaveProductUrls) return;
     try {
       const catLinks = await this.getCats();
       const lastWriteId = this.db.get("state.prodLastWriteId").value();
       const lastWriteHref = this.db.get("state.prodLastWriteHref").value();
-      const lastWriteCat = this.db.get("state.prodLastWriteCat").value();
       let counter = lastWriteId ? lastWriteId : 1;
       let start = counter < 2 ? true : false;
-      console.log(start, "start");
 
       // loop through cats
       for (let i = 0; i < catLinks.length; i++) {
@@ -243,8 +200,6 @@ class Puppeteer {
       let start = counter < 2 ? true : false;
 
       while (true) {
-        // console.log(start, `start`);
-
         const { cat: prodCat, href: prodUrl } = this.db
           .get("products")
           .getById(counter)
@@ -270,8 +225,6 @@ class Puppeteer {
       console.log(`no product at this location in db`);
       return;
     }
-
-    // for (let counter = 0; counter < 3; counter++) {}
   };
 
   /*
@@ -319,7 +272,7 @@ class Puppeteer {
         inStock: 1,
         weight: null,
         reviews: 1,
-        note: "Thanks for buy from Mann Support",
+        note: "Thank you for buy from Mann Support",
         price: productPrices.join(attrSeperator),
         stock: 500,
         img: productImages.join(attrSeperator),
@@ -700,10 +653,57 @@ class Puppeteer {
     this.browser.close();
   };
 
-  writeDom = async (selector) => {
-    const data = await this.getDom(selector);
-    this.writeToFile("./temp.html", data, "dom");
-  };
+  ////////////////////////////////////
+  // Unused but there for debugging //
+  ////////////////////////////////////
+
+  // /*
+  //  * saves session to file
+  //  */
+  // saveSession = async () => {
+  //   const cookies = await this.page.cookies();
+  //   this.writeToFile(sessionFile, JSON.stringify(cookies, null, 2), "cookies");
+  // };
+
+  // /*
+  //  * writes text to file
+  //  */
+  // writeToFile = (filename, data, log) => {
+  //   this.fs.writeFile(filename, data, function (err) {
+  //     if (err) throw err;
+  //     console.log(`${log} written to file`);
+  //   });
+  // };
+
+  // /*
+  //  * Produces element dom in text
+  //  */
+  // getDom = async (selector = null) => {
+  //   const dom = await this.page.evaluate((selector) => {
+  //     let data = [];
+  //     let node;
+  //     if (selector) node = document.querySelectorAll(selector);
+  //     else node = document.querySelectorAll("body");
+
+  //     node.forEach((item) => {
+  //       data.push(item.innerHTML);
+  //     });
+  //     return data;
+  //   }, selector);
+  //   return dom.length == 1 ? dom[0] : dom;
+  // };
+
+  // /*
+  //  * Creates screenshots
+  //  */
+  // screenshot = async (filename) => {
+  //   await this.page.screenshot({ path: filename });
+  // };
+
+  // writeDom = async (selector) => {
+  //   const data = await this.getDom(selector);
+  //   this.writeToFile("./temp.html", data, "dom");
+  // };
 }
 
 module.exports = Puppeteer;

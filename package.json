@@ -4,8 +4,9 @@
   "description": "Scrapes products from portwest.com",
   "main": "index.js",
   "scripts": {
-    "debug": "clear && node scraper2.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scrap": "clear && node index.js",
+    "scrap-nolinkfetch": "clear && dontSaveProductUrls=true node index.js",
+    "scrap-noresume": "clear && resume=false node index.js"
   },
   "author": "Joseph Lukan",
   "license": "MIT",
