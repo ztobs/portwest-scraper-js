@@ -4,5 +4,5 @@ pw_credentials.json
 browser_data/
 hello.js
 temp.html
-generated/*
-output/*
+generated/*.json
+output/*.csv
