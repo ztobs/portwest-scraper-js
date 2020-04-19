@@ -223,17 +223,34 @@ class Puppeteer {
   final = async () => {
     try {
       const prodLastReadId = this.db.get("state.prodLastReadId").value();
+      const prodLastReadHref = this.db.get("state.prodLastReadHref").value();
+      const prodLastReadCat = this.db.get("state.prodLastReadCat").value();
       let counter = prodLastReadId ? prodLastReadId : 1;
+      let start = counter < 2 ? true : false;
 
       while (true) {
+        // console.log(start, `start`);
+
         const { cat: prodCat, href: prodUrl } = this.db
           .get("products")
           .getById(counter)
           .value();
-        await this.writeProductToCSVPrep(prodUrl, prodCat);
-        this.db.set("state.prodLastReadId", counter).write();
-        // if (prodUrl == null) break;
-        counter++;
+        if (
+          start === true ||
+          (prodLastReadHref == prodUrl && prodLastReadCat == prodCat)
+        ) {
+          // dont write to csv again if already written
+          if (start === false) {
+            start = true;
+            counter++;
+            continue;
+          }
+          await this.writeProductToCSVPrep(prodUrl, prodCat);
+          this.db.set("state.prodLastReadId", counter).write();
+          this.db.set("state.prodLastReadHref", prodUrl).write();
+          this.db.set("state.prodLastReadCat", prodCat).write();
+          counter++;
+        }
       }
     } catch (error) {
       console.log(`no product at this location in db`);

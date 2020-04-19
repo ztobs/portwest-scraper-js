@@ -73,4 +73,5 @@ const cred = require("./pw_credentials.json");
  * Dont save product urls already saved *done*
  * Dont load cat links already fetched
  * navigate through products saved in temp db and load the products
+ * dont write products already written to csv
  */
