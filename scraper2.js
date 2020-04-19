@@ -51,14 +51,18 @@ const cred = require("./pw_credentials.json");
   // // login to portwest
   // await Pup.open("https://portwest.co.uk/main/login/", "F");
   // await Pup.login(cred);
+
   // await Pup.saveSession();
   // await Pup.screenshot("./output/afterlogin.png");
 
   // load any F**cking page
-  await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
+  await Pup.open("https://portwest.co.uk/main/login/"); // we should be redirected automatically to main page here
 
-  // get category links
-  await Pup.saveProductsUrl();
+  // get all product links and save to temp db
+  // await Pup.saveProductsUrl();
+
+  // loop through the products db in temp and load and write to csv
+  await Pup.final();
 
   // goto product page by sku
   // await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
@@ -81,3 +85,9 @@ const cred = require("./pw_credentials.json");
 })().catch((err) => console.log(err));
 
 // dont use '/' to seperate product variations because some colors already use it, use '|'
+
+/* todo
+ * Dont save product urls already saved *done*
+ * Dont load cat links already fetched
+ * navigate through products saved in temp db and load the products
+ */

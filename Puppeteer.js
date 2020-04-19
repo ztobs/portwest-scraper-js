@@ -6,6 +6,9 @@ const {
   timePageLoad,
   catSeperator,
   genPath,
+  attrSeperator,
+  outputPath,
+  finalProdCSV,
 } = require("./constants");
 
 class Puppeteer {
@@ -117,8 +120,9 @@ class Puppeteer {
       await this.type("#password", cred.password);
       await this.page.click("body > div > div > div > form > input");
       await this.page.waitFor(timePageLoad);
+      console.log("login successfull");
     } catch (e) {
-      console.log("Can't login, maybe already did");
+      console.log("Can't login again, already did");
     }
   };
 
@@ -144,7 +148,7 @@ class Puppeteer {
       const lastWriteId = this.db.get("state.prodLastWriteId").value();
       const lastWriteHref = this.db.get("state.prodLastWriteHref").value();
       const lastWriteCat = this.db.get("state.prodLastWriteCat").value();
-      let counter = lastWriteId ? lastWriteId : 0;
+      let counter = lastWriteId ? lastWriteId : 1;
       let start = counter < 1 ? true : false;
       console.log(start, "start");
 
@@ -156,9 +160,6 @@ class Puppeteer {
         // loop through products
         for (let j = 0; j < prodLinks.length; j++) {
           const pL = prodLinks[j];
-          console.log(start, "start");
-          console.log(lastWriteHref, counter);
-          console.log(lastWriteCat, cat.text);
 
           if (start || lastWriteHref == pL) {
             // prevent saving if already saved, didnt just use counter because we would also control/prvent from page loading so not all cats will get here
@@ -187,29 +188,96 @@ class Puppeteer {
   };
 
   /*
-   * Get product links in cat
+   * finalize
    */
-  getProductLinksInCat = async (url) => {
+  final = async () => {
+    const prodLastReadId = this.db.get("state.prodLastReadId").value();
+    let counter = prodLastReadId ? prodLastReadId : 1;
+
+    // while (true) {
+    // }
+
+    for (let i = 0; i < 2; i++) {
+      await this.writeProductToCSVPrep(counter);
+      this.db.set("state.prodLastReadId", counter).write();
+    }
+  };
+
+  /*
+   * write product to csv
+   */
+  writeProductToCSVPrep = async (counter) => {
     try {
-      await this.open(url);
-      return await this.page.evaluate(() => {
-        const selector = ".product .product-title a";
-        return [...document.querySelectorAll(selector)].map((ele) => ele.href);
-      });
+      const { cat: prodCat, href: prodUrl } = this.db
+        .get("products")
+        .getById(counter)
+        .value();
+      await this.open(prodUrl);
+      const prodData = await this.getProductData();
+      prodData.cat = prodCat;
+
+      this.writeProductToCSV(prodData);
     } catch (error) {
-      console.log(`cannot get products in cat url ${url}`);
+      console.log(`cannot prepare products for csv write`);
+    }
+  };
+
+  /*
+   * Get product data in array
+   */
+  getProductData = async () => {
+    try {
+      const productName = await this.getProductName();
+      const productColors = await this.getProductColors();
+      const productItemNames = await this.getProductItemNames();
+      const productSizes = await this.getProductSizes();
+      const productSOH = await this.getProductSOH();
+      const productPrices = await this.getProductPrices();
+      const productBoxQty = await this.getProductBoxQty();
+      const productDesc = await this.getProductDesc();
+      const productShortDesc = await this.getProductShortDesc();
+      const productImages = await this.getProductImages();
+      const productSKU = await this.getProductStyle();
+
+      return {
+        type: "simple",
+        sku: productSKU,
+        name: productName,
+        published: 1,
+        featured: 0,
+        visibility: "visible",
+        sDesc: productShortDesc,
+        desc: productDesc,
+        tax: "none",
+        inStock: 1,
+        weight: null,
+        reviews: 1,
+        note: "Thanks for buy from Mann Support",
+        price: productPrices.join(attrSeperator),
+        stock: 500,
+        img: productImages.join(attrSeperator),
+        pos: 9,
+        boxQty: productBoxQty.join(attrSeperator),
+        soh: productSOH.join(attrSeperator),
+        item: productItemNames.join(attrSeperator),
+        color: productColors.join(attrSeperator),
+        size: productSizes.join(attrSeperator),
+      };
+    } catch (error) {
+      console.log(`cannot write product to csv`);
       return null;
     }
   };
 
   /*
-   * Get write product to csv
+   * write product to csv file
    */
-  writeProductToCSV = async (product, filename) => {
+  writeProductToCSV = (product) => {
     try {
+      const filename = outputPath + finalProdCSV;
       const createCsvWriter = require("csv-writer").createObjectCsvWriter;
       const csvWriter = createCsvWriter({
-        path: "out.csv",
+        path: filename,
         header: [
           { id: "type", title: "Type" },
           { id: "sku", title: "SKU" },
@@ -243,6 +311,22 @@ class Puppeteer {
         });
     } catch (error) {
       console.log(`cannot write ${product.sku} to csv`);
+    }
+  };
+
+  /*
+   * Get product links in cat
+   */
+  getProductLinksInCat = async (url) => {
+    try {
+      await this.open(url);
+      return await this.page.evaluate(() => {
+        const selector = ".product .product-title a";
+        return [...document.querySelectorAll(selector)].map((ele) => ele.href);
+      });
+    } catch (error) {
+      console.log(`cannot get products in cat url ${url}`);
+      return null;
     }
   };
 
@@ -294,35 +378,6 @@ class Puppeteer {
       console.log("cannot get category links");
       return null;
     }
-  };
-
-  /*
-   * Get product data in array
-   */
-  getProductData = async () => {
-    const productName = await this.getProductName();
-    const productColors = await this.getProductColors();
-    const productItemNames = await this.getProductItemNames();
-    const productSizes = await this.getProductSizes();
-    const productSOH = await this.getProductSOH();
-    const productPrices = await this.getProductPrices();
-    const productBoxQty = await this.getProductBoxQty();
-    const productDesc = await this.getProductDesc();
-    const productShortDesc = await this.getProductShortDesc();
-    const productImages = await this.getProductImages();
-
-    return {
-      productName,
-      productColors,
-      productItemNames,
-      productSizes,
-      productSOH,
-      productPrices,
-      productBoxQty,
-      productDesc,
-      productShortDesc,
-      productImages,
-    };
   };
 
   /*

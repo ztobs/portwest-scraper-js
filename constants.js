@@ -4,8 +4,11 @@ const constants = {
   timeDelay: 500,
   timePageLoad: 10000,
   sessionFile: "./session.json",
-  catSeperator: "|",
+  catSeperator: ">",
+  attrSeperator: "|",
   genPath: "generated/",
+  outputPath: "output/",
+  finalProdCSV: "products-portwest.csv",
 };
 
 module.exports = constants;
