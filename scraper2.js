@@ -64,23 +64,6 @@ const cred = require("./pw_credentials.json");
   // loop through the products db in temp and load and write to csv
   await Pup.final();
 
-  // goto product page by sku
-  // await Pup.open("https://portwest.co.uk/main/login/", "F"); // we should be redirected automatically to main page here
-
-  // await Pup.loadProductPage("FC15");
-  // const dd = await Pup.getProductData();
-
-  // console.log("link", dd);
-
-  // await Pup.writeDom();
-
-  //   const data = await Pup.getDom(".menu-title");
-  //   Pup.writeToFile("./output/dom.html", data);
-
-  // await Pup.screenshot("./output/final.png");
-
-  // await Pup.loadProductPage("BIZ4");
-
   Pup.close();
 })().catch((err) => console.log(err));
 

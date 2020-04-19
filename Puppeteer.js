@@ -12,9 +12,9 @@ const {
 } = require("./constants");
 
 class Puppeteer {
-  // browser
+  //
   chromium = require("chrome-aws-lambda");
-
+  createCsvWriter = require("csv-writer").createObjectCsvWriter;
   lodashId = require("lodash-id");
 
   init = async (cookie) => {
@@ -25,6 +25,36 @@ class Puppeteer {
     this.db = low(adapter);
     this.db.defaults({ products: [], state: {} }).write();
     this.db._.mixin(this.lodashId);
+
+    // initialize product csv writer
+    this.productCSVWriter = this.createCsvWriter({
+      path: outputPath + finalProdCSV,
+      header: [
+        { id: "type", title: "Type" },
+        { id: "sku", title: "SKU" },
+        { id: "name", title: "Name" },
+        { id: "published", title: "Published" },
+        { id: "featured", title: "Is featured?" },
+        { id: "visibility", title: "Visibility in catalog" },
+        { id: "sDesc", title: "Short Description" },
+        { id: "desc", title: "Description" },
+        { id: "tax", title: "Tax Status" },
+        { id: "inStock", title: "In stock?" },
+        { id: "weight", title: "Weight" },
+        { id: "reviews", title: "Allow customer reviews?" },
+        { id: "note", title: "Purchase Note" },
+        { id: "price", title: "Price" },
+        { id: "stock", title: "Stock" },
+        { id: "cat", title: "Categories" },
+        { id: "img", title: "Images" },
+        { id: "pos", title: "Position" },
+        { id: "boxQty", title: "Box Quantity" },
+        { id: "soh", title: "SOH" },
+        { id: "item", title: "Item" },
+        { id: "color", title: "Color" },
+        { id: "size", title: "Size" },
+      ],
+    });
 
     // initialize browser
     this.browser = await this.chromium.puppeteer.launch({
@@ -149,7 +179,7 @@ class Puppeteer {
       const lastWriteHref = this.db.get("state.prodLastWriteHref").value();
       const lastWriteCat = this.db.get("state.prodLastWriteCat").value();
       let counter = lastWriteId ? lastWriteId : 1;
-      let start = counter < 1 ? true : false;
+      let start = counter < 2 ? true : false;
       console.log(start, "start");
 
       // loop through cats
@@ -191,32 +221,38 @@ class Puppeteer {
    * finalize
    */
   final = async () => {
-    const prodLastReadId = this.db.get("state.prodLastReadId").value();
-    let counter = prodLastReadId ? prodLastReadId : 1;
+    try {
+      const prodLastReadId = this.db.get("state.prodLastReadId").value();
+      let counter = prodLastReadId ? prodLastReadId : 1;
 
-    // while (true) {
-    // }
-
-    for (let i = 0; i < 2; i++) {
-      await this.writeProductToCSVPrep(counter);
-      this.db.set("state.prodLastReadId", counter).write();
+      while (true) {
+        const { cat: prodCat, href: prodUrl } = this.db
+          .get("products")
+          .getById(counter)
+          .value();
+        await this.writeProductToCSVPrep(prodUrl, prodCat);
+        this.db.set("state.prodLastReadId", counter).write();
+        // if (prodUrl == null) break;
+        counter++;
+      }
+    } catch (error) {
+      console.log(`no product at this location in db`);
+      return;
     }
+
+    // for (let counter = 0; counter < 3; counter++) {}
   };
 
   /*
    * write product to csv
    */
-  writeProductToCSVPrep = async (counter) => {
+  writeProductToCSVPrep = async (prodUrl, prodCat) => {
     try {
-      const { cat: prodCat, href: prodUrl } = this.db
-        .get("products")
-        .getById(counter)
-        .value();
       await this.open(prodUrl);
       const prodData = await this.getProductData();
-      prodData.cat = prodCat;
+      prodData.cat = prodCat; // patch up the product data with cat from url, we couldnt get cat from prod page
 
-      this.writeProductToCSV(prodData);
+      await this.writeProductToCSV(prodData);
     } catch (error) {
       console.log(`cannot prepare products for csv write`);
     }
@@ -272,39 +308,9 @@ class Puppeteer {
   /*
    * write product to csv file
    */
-  writeProductToCSV = (product) => {
+  writeProductToCSV = async (product) => {
     try {
-      const filename = outputPath + finalProdCSV;
-      const createCsvWriter = require("csv-writer").createObjectCsvWriter;
-      const csvWriter = createCsvWriter({
-        path: filename,
-        header: [
-          { id: "type", title: "Type" },
-          { id: "sku", title: "SKU" },
-          { id: "name", title: "Name" },
-          { id: "published", title: "Published" },
-          { id: "featured", title: "Is featured?" },
-          { id: "visibility", title: "Visibility in catalog" },
-          { id: "sDesc", title: "Short Description" },
-          { id: "desc", title: "Description" },
-          { id: "tax", title: "Tax Status" },
-          { id: "inStock", title: "In stock?" },
-          { id: "weight", title: "Weight" },
-          { id: "reviews", title: "Allow customer reviews?" },
-          { id: "note", title: "Purchase Note" },
-          { id: "price", title: "Price" },
-          { id: "stock", title: "Stock" },
-          { id: "cat", title: "Categories" },
-          { id: "img", title: "Images" },
-          { id: "pos", title: "Position" },
-          { id: "boxQty", title: "Box Quantity" },
-          { id: "soh", title: "SOH" },
-          { id: "item", title: "Item" },
-          { id: "color", title: "Color" },
-          { id: "size", title: "Size" },
-        ],
-      });
-      csvWriter
+      await this.productCSVWriter
         .writeRecords([product]) // returns a promise
         .then(() => {
           console.log(`${product.sku} written to csv`);
