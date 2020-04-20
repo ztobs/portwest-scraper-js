@@ -16,6 +16,6 @@ WORKDIR /root
 COPY . .
 RUN git clone https://github.com/ztobs/portwest-scraper-js.git && cd portwest-scraper-js
 RUN ${NPM} install
-RUN ${NODE} index.js
+
 
 
