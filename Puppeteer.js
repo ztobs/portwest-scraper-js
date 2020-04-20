@@ -381,7 +381,9 @@ class Puppeteer {
         ).innerText;
         return data;
       });
-      return ret.split("-")[1].trim();
+      const arr = ret.split("-");
+      arr.shift(); // removes the first element
+      return arr.join(" ");
     } catch (error) {
       console.log("cannot fetch product name");
       return null;

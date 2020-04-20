@@ -1,66 +1,65 @@
-# Product Name
+Portwest Products Scraper
 
-> Short blurb about what your product does.
+> Extracts all products on portwest.co.uk site into a csv file
 
-One to two paragraph statement about your product and what it does.
+[![NPM Version][npm-image]][npm-url]
+![Docker Automated build](https://img.shields.io/badge/docker%20build-automated-green)
+[![Downloads Stats][npm-downloads]][npm-url]
 
-![](header.png)
+![](portwest-home.png)
 
 ## Installation
 
-OS X & Linux:
+Without docker:
 
 ```sh
-npm install my-crazy-module --save
+git clone https://github.com/ztobs/portwest-scraper-js.git
+cd portwest-scraper-js
+nano pw_credentials.json
+{
+  "email": "xxx",
+  "password": "xxxxxxxxx"
+}
+npm install
+npm run scrap
 ```
 
-Windows:
+With Docker:
 
 ```sh
-edit autoexec.bat
+git clone https://github.com/ztobs/portwest-scraper-js.git
+docker build -t pwscraper .
+docker run -it pwscraper
+cd ~/portwest-scraper-js
+nano pw_credentials.json
+{
+  "email": "xxx",
+  "password": "xxxxxxxxx"
+}
+npm run scrap
 ```
 
-## Usage example
+## Usage
 
-A few motivating and useful examples of how your product can be used. Spice this up with code blocks and potentially more screenshots.
-
-_For more examples and usage, please refer to the [Wiki][wiki]._
-
-## Development setup
-
-Describe how to install all development dependencies and how to run an automated test-suite of some kind. Potentially do this for multiple platforms.
-
-```sh
-make install
-npm test
-```
+- You obviously need git installed on your machine
+- for running with docker, you need dont need npm installed on your machine
+- pay attension to the part where you have to create the pw_credential.json file and add your login credentils
+- the exported files will be in the generated/ folder
 
 ## Release History
 
-- 0.2.1
-  - CHANGE: Update docs (module code remains unchanged)
-- 0.2.0
-  - CHANGE: Remove `setDefaultXYZ()`
-  - ADD: Add `init()`
-- 0.1.1
-  - FIX: Crash when calling `baz()` (Thanks @GenerousContributorName!)
-- 0.1.0
-  - The first proper release
-  - CHANGE: Rename `foo()` to `bar()`
 - 0.0.1
   - Work in progress
 
 ## Meta
 
-Your Name – [@YourTwitter](https://twitter.com/dbader_org) – YourEmail@example.com
+Your Name – [@dadonztobs](https://twitter.com/dadonztobs) – ztobscieng@gmail.com
 
-Distributed under the XYZ license. See `LICENSE` for more information.
-
-[https://github.com/yourname/github-link](https://github.com/dbader/)
+[https://github.com/ztobs/portwest-scraper-js](https://github.com/ztobs/)
 
 ## Contributing
 
-1. Fork it (<https://github.com/yourname/yourproject/fork>)
+1. Fork it (<https://github.com/ztobs/portwest-scraper-js/fork>)
 2. Create your feature branch (`git checkout -b feature/fooBar`)
 3. Commit your changes (`git commit -am 'Add some fooBar'`)
 4. Push to the branch (`git push origin feature/fooBar`)
