@@ -11,10 +11,7 @@
   "author": "Joseph Lukan",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
-    "cheerio": "^1.0.0-rc.3",
     "chrome-aws-lambda": "^2.1.1",
-    "csv-parser": "^2.3.2",
     "csv-writer": "^1.6.0",
     "lodash-id": "^0.14.0",
     "lowdb": "^1.0.0",
